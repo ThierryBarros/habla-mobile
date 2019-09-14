@@ -68,6 +68,7 @@ export default class PostScreen extends React.Component<PostScreenProps, PostScr
             id
             body
             distance
+            exactDistance
             createdAt
             anonymous
             commentsCount
@@ -79,6 +80,14 @@ export default class PostScreen extends React.Component<PostScreenProps, PostScr
             profileFollowPost {
               postId
               profileUid
+            }
+            profileRevealPosts{
+              profileUid
+              postId
+              type
+              post {
+                exactDistance
+              }
             }
             owner {
               uid

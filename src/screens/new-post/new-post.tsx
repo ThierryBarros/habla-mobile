@@ -48,6 +48,7 @@ export default class NewPostScreen extends React.Component<NewPostScreenProps, N
               id
               body
               distance
+              exactDistance
               createdAt
               commentsCount
               rate
@@ -59,6 +60,14 @@ export default class NewPostScreen extends React.Component<NewPostScreenProps, N
               profileFollowPost{
                 postId
                 profileUid
+              }
+              profileRevealPosts{
+                profileUid
+                postId
+                type
+                post {
+                  exactDistance
+                }
               }
               owner {
                 uid

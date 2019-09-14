@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { View, TouchableOpacity, Text, StyleSheet, Image, Dimensions} from 'react-native';
+import { View, TouchableOpacity, Text, StyleSheet, Image, Dimensions, Alert} from 'react-native';
 import moment from 'moment';
 import { FontAwesome } from '@expo/vector-icons';
 import { client } from '../../services/client';
@@ -11,11 +11,8 @@ import AutoHeightImage from 'react-native-auto-height-image';
 import THEME from '../../theme/theme';
 import firebase from 'firebase';
 
-import ActionSheet from 'react-native-actionsheet'
-
 export default class PostComponent extends React.Component<PostComponentProps, PostComponentState> {
-  actionSheet;
-
+  
   constructor(props: PostComponentProps) {
     super(props);
 
@@ -25,6 +22,7 @@ export default class PostComponent extends React.Component<PostComponentProps, P
   }
 
   componentWillReceiveProps() {
+    
     this.setState({ post: this.props.post });
     
   }
@@ -124,24 +122,62 @@ export default class PostComponent extends React.Component<PostComponentProps, P
 
     this.props.onPostDeleted && await this.props.onPostDeleted(this.state.post);
   }
+
+  revealDistance = async(type: "EXACT_DISTANCE") => {
+    if (!(type === "EXACT_DISTANCE")) return;
+
+    this.setState({ post: { ... this.state.post }});
+
+    try {
+      const response = await client.mutate({
+        variables: {
+          postId : this.state.post.id,
+          type: type
+        },
+        mutation: gql(`
+          mutation revealPost ($postId: ID!, $type: ProfileRevealPostType!) {          
+            revealPost (postId: $postId, type: $type){
+              type
+              postId
+              profileUid
+              post {
+                exactDistance
+              }
+            }
+          }
+        `)
+      });
+
+      this.setState({
+        post: {
+          ... this.state.post, 
+          exactDistance: response.revealPost.post.exactDistance,
+        }
+      });
+
+    } catch (error) {
+      const errorMessage = error.networkError? i18n.t('screens.post.errors.revealDistancePost.connection'):i18n.t('screens.post.errors.revealDistancePost.unexpected');
+      this.setState({ errorMessage });
+      console.log(error);
+    } 
+  }
+
+  showAlert = () => {
+    Alert.alert(
+      i18n.t('screens.post.alert.title'),
+      i18n.t('screens.post.alert.message'),
+      [
+        {text: i18n.t('screens.post.buttons.cancel'), onPress: () => {}},
+        {text: i18n.t('screens.post.buttons.show'), onPress: () => this.revealDistance("EXACT_DISTANCE")}
+      ],
+      { cancelable: false}
+    )
+  }
   
   render() {
       const vote = this.state.post.profilePostVote && this.state.post.profilePostVote.type;
       const photoDefault = require('../../../assets/avatar-placeholder.png');
       const { profileFollowPost } = this.state.post;
-      const actionSheetOptions = [
-        (!(this.state.post.owner && this.state.post.owner.uid === firebase.auth().currentUser.uid)) && { 
-          title: !profileFollowPost ? i18n.t('components.post.actionSheet.follow'): i18n.t('components.post.actionSheet.unfollow'),
-          handler: this.followPost
-        },
-        this.state.post.owner && this.state.post.owner.uid === firebase.auth().currentUser.uid && {
-          title: i18n.t('components.post.actionSheet.delete'), 
-          handler: this.deletePost
-        },
-        { 
-          title: i18n.t('components.post.actionSheet.cancel')
-        }
-      ].filter(o => !!o);
       
       return (
        
@@ -153,16 +189,15 @@ export default class PostComponent extends React.Component<PostComponentProps, P
             {this.state.post.anonymous? <Text style={styles.headerText}>{ i18n.t('global.user.anonymousLabel')}</Text>: <Text style={styles.headerText}>{ this.state.post.owner.username }</Text>}
           </TouchableOpacity>
           <View style={styles.postOptions}>
-            <ActionSheet
-                      tintColor={THEME.colors.primary.default}
-                      ref={o => this.actionSheet = o}
-                      options={actionSheetOptions.map(o => o.title)}
-                      cancelButtonIndex={actionSheetOptions.length - 1}
-                      onPress={(index) => { actionSheetOptions[index].handler && actionSheetOptions[index].handler() }}
-              />
-            <TouchableOpacity onPress={() => this.actionSheet.show()} style={styles.clickableArea}>
-              <FontAwesome name="ellipsis-h" size={20}/>
-            </TouchableOpacity>
+            { !(this.state.post.owner && this.state.post.owner.uid === firebase.auth().currentUser.uid) ?
+              <TouchableOpacity style={styles.clickableArea} onPress={this.followPost}>
+                <FontAwesome name={!profileFollowPost ? "bell-o" : "bell-slash-o"} size={20}/>
+              </TouchableOpacity>
+            :
+              <TouchableOpacity style={styles.clickableArea} onPress={this.deletePost}>
+                <FontAwesome name="trash-o" size={20}/>
+              </TouchableOpacity>
+            } 
           </View>
         </View>)
       : null }
@@ -194,7 +229,9 @@ export default class PostComponent extends React.Component<PostComponentProps, P
           </View>
         </View>
         <View style={styles.bottom}>
-          <Text style={styles.bottomText}>{getTranslatedDistanceFromEnum(this.state.post.distance)}</Text>
+          <TouchableOpacity style={styles.distance} disabled={this.state.post.exactDistance} onPress={this.showAlert} hitSlop={{top: 10, bottom: 10, left: 20, right: 20}}>
+            <Text style={styles.bottomText}>{this.state.post.exactDistance ? i18n.t('screens.post.exactDistance', { meters: `${this.state.post.exactDistance}` }) : getTranslatedDistanceFromEnum(this.state.post.distance)}</Text>
+          </TouchableOpacity>
           <Text style={styles.separator}>
             •
           </Text>
@@ -324,6 +361,9 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     paddingLeft: 20, 
     paddingRight: 13
+  },
+  distance:{
+    paddingRight: 11
   }
 });
 

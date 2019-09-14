@@ -81,6 +81,7 @@ export default class ProfileScreen extends React.Component<ProfileScreenProps, P
                 commentsCount
                 rate
                 distance
+                exactDistance
                 photoURL
                 anonymous
                 profilePostVote {
@@ -89,6 +90,14 @@ export default class ProfileScreen extends React.Component<ProfileScreenProps, P
                 profileFollowPost{
                   postId
                   profileUid
+                }
+                profileRevealPosts{
+                  profileUid
+                  postId
+                  type
+                  post {
+                    exactDistance
+                  }
                 }
                 owner {
                   uid

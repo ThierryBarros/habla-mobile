@@ -182,6 +182,7 @@ export default class TimelineScreen extends React.Component<TimelineProps, Timel
                 id
                 body
                 distance
+                exactDistance
                 createdAt
                 commentsCount
                 rate
@@ -193,6 +194,14 @@ export default class TimelineScreen extends React.Component<TimelineProps, Timel
                 profileFollowPost{
                   postId
                   profileUid
+                }
+                profileRevealPosts{
+                  profileUid
+                  postId
+                  type
+                  post {
+                    exactDistance
+                  }
                 }
                 owner {
                   uid

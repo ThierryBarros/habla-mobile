@@ -134,11 +134,21 @@ const en: AppTranslations = {
         },
         post: {
             title: 'Post',
+            exactDistance: '{{meters}} meters',
             comments: {
                 newCommentInputPlaceholder: 'Type a comment...',
                 buttons: {
                     submit: 'Send'
                 }
+            },
+            buttons: {
+                show: 'Show',
+                cancel: 'Cancel',
+                define: 'Define'
+            },
+            alert: {
+                title: 'Reveal exact location of this post?',
+                message: 'This will cost 10 points.'
             },
             errors: {
                 loadingPost: {
@@ -151,6 +161,10 @@ const en: AppTranslations = {
                 },
                 votingPost:{
                     unexpected: 'An unexpected error occurred while voting the post.',
+                    connection: 'There was a problem voting the post. Please check your connection.'
+                },
+                revealDistancePost:{
+                    unexpected: 'Insufficient score to reveal post information.',
                     connection: 'There was a problem voting the post. Please check your connection.'
                 }
             }
